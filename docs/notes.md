@@ -1,0 +1,1 @@
+* 17 Nov, 2023 Extra class: Follow your own input format, it can be parsed in-line or character-separated value as well.
