@@ -27,16 +27,16 @@ def query():
         prod = ""
         count_1_quant = ""
         sum_2_quant = ""
-        avg_2_quant = ""
+        min_2_quant = ""
         max_3_quant = ""
 
     data = []
     
-    # For all the grouping variables bruh
+    # For all the grouping variables
     group_by_map = dict()
     
     for row in cur:
-        key = (row['cust'],row['prod'])
+        key = (row['cust'], row['prod'])
         
         if (not group_by_map.get(key)) and (group_by_map.get(key) != 0):
             data.append(MFStruct())
@@ -45,6 +45,36 @@ def query():
         pos = group_by_map.get(key)
         data[pos].cust = row['cust']
         data[pos].prod = row['prod']
+
+    # We need to compute values to the aggregate functions with their corresponding grouping variable predicate.
+    cur.scroll(0, mode='absolute')
+
+    for row in cur:
+        key = (row['cust'], row['prod'])
+        if row.state=='NY' and row.quant>10 and row.cust=='Sam':
+            pos = group_by_map[key]
+            data[pos].count_1_quant = data[pos].count_1_quant + 1
+    cur.scroll(0, mode='absolute')
+
+    for row in cur:
+        key = (row['cust'], row['prod'])
+        if row.state=='NJ':
+            pos = group_by_map[key]
+            data[pos].sum_2_quant = data[pos].sum_2_quant + row['quant']
+    cur.scroll(0, mode='absolute')
+
+    for row in cur:
+        key = (row['cust'], row['prod'])
+        if row.state=='NJ':
+            pos = group_by_map[key]
+            data[pos].min_2_quant = min(data[pos].min_2_quant, row['quant'])
+    cur.scroll(0, mode='absolute')
+
+    for row in cur:
+        key = (row['cust'], row['prod'])
+        if row.state=='CT':
+            pos = group_by_map[key]
+            data[pos].max_3_quant = max(data[pos].max_3_quant, row['quant'])
 
     table = PrettyTable()
     table.field_names = data[0].__dict__.keys()
