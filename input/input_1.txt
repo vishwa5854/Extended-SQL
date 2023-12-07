@@ -1,0 +1,10 @@
+s:
+s
+n:
+3
+v:
+cust, prod
+f:
+count_1_quant, sum_2_quant, avg_2_quant, max_3_quant
+p:
+g:

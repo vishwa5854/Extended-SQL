@@ -1,5 +1,35 @@
 import subprocess
+import sys
 
+# Get input parameters, return a dictionary
+def parse_input(file_name):
+    with open(file_name, 'r') as file:
+        lines = file.readlines()
+
+    input_params = {"s": [], "n": 0, "v": [], "f": [], "p": [], "g": ""}
+
+    sections = ["s", "n", "v", "f", "p", "g"]
+    section = None
+
+    for line in lines:
+        line = line.strip()
+        if line[:-1] in sections:
+            section = line[:-1]
+            continue
+        if section == "s":
+            input_params[section] = [item.strip() for item in line.split(",")]
+        elif section == "n":
+            input_params[section] = int(line)
+        elif section == "v":
+            input_params[section] = [item.strip() for item in line.split(",")]
+        elif section == "f":
+            input_params[section] = [item.strip() for item in line.split(",")]
+        elif section == "p":
+            input_params[section].append(line)
+        elif section == "g":
+            input_params[section] = line
+
+    return input_params
 
 def phi(s: [str], n: int, v: [str], f: [str], p: [str], g: str):
     """
@@ -76,15 +106,17 @@ def phi(s: [str], n: int, v: [str], f: [str], p: [str], g: str):
 {aggregate_loops}"""
 
 
-def main():
+def main(input_file):
     """
     This is the generator code. It should take in the MF structure and generate the code
     needed to run the query. That generated code should be saved to a 
     file (e.g. _generated.py) and then run.
     """
 
-    body = phi(['s'], 3, ['cust', 'prod'], ['count_1_quant', 'sum_2_quant', 'min_2_quant', 'max_3_quant'],
-               ["1.state=='NY' and 1.quant>10 and 1.cust=='Sam'", "2.state=='NJ'", "3.state=='CT'"], "")
+    input_params = parse_input(f"input/{input_file}")
+    body = phi(input_params['s'], input_params['n'], input_params["v"], input_params["f"], input_params["p"], input_params["g"])
+    # body = phi(['s'], 3, ['cust', 'prod'], ['count_1_quant', 'sum_2_quant', 'min_2_quant', 'max_3_quant'],
+    #            ["1.state=='NY' and 1.quant>10 and 1.cust=='Sam'", "2.state=='NJ'", "3.state=='CT'"], "")
 
     # Note: The f allows formatting with variables.
     #       Also, note the indentation is preserved.
@@ -141,5 +173,5 @@ if "__main__" == __name__:
 
 
 if "__main__" == __name__:
-    main()
+    main(sys.argv[1])
     # print(phi(['s'], 3, ['cust'], ['count_1_quant', 'sum_2_quant', 'avg_2_quant', 'max_3_quant'], [None], ""))
