@@ -44,6 +44,8 @@ def phi(s: [str], n: int, v: [str], f: [str], p: [str], g: str):
     """
     class_variables = ""
 
+    # Init of f members to corresponding values like for max default should be -1, for min default should be MAX_NUM
+    # for sum, it would be 0, count = 0, avg = 0
     for i in [v, f]:
         for j in i:
             class_variables += f"""        {j} = ""\n"""
@@ -51,19 +53,44 @@ def phi(s: [str], n: int, v: [str], f: [str], p: [str], g: str):
     key = "("
 
     for i in v:
-        key += f"row['{i}'],"
-    key = key[:-1] + ")"
+        key += f"row['{i}'], "
+    key = key[:-2] + ")"
     group_by_values_insertion = ""
 
     for i in v:
         group_by_values_insertion += f"        data[pos].{i} = row['{i}']\n"
+
+    aggregate_loops = ""
+
+    # we are generating for loops for each aggregate function with their respective predicates
+    # 1.state='NY'
+    for i in f:
+        aggregate_function, gv_num, aggregate_attribute = i.split("_")
+        predicate = p[int(gv_num) - 1]
+        predicate = predicate.replace(f"{gv_num}.", "row.")
+        aggregate_string = ""
+
+        if aggregate_function == "sum":
+            aggregate_string = f"data[pos].{i} + row['{aggregate_attribute}']"
+        elif aggregate_function == "count":
+            aggregate_string = f"data[pos].{i} + 1"
+        elif aggregate_function == "min":
+            aggregate_string = f"min(data[pos].{i}, row['{aggregate_attribute}'])"
+        elif aggregate_function == "max":
+            aggregate_string = f"max(data[pos].{i}, row['{aggregate_attribute}'])"
+        elif aggregate_function == "avg":
+            pass
+            # TODO: Figure out the denominator somehow
+
+        aggregate_loops += f"    cur.scroll(0, mode='absolute')\n\n    for row in cur:\n        key = {key}\n        if {predicate}:\n"
+        aggregate_loops += f"            pos = group_by_map[key]\n            data[pos].{i} = {aggregate_string}\n"
 
     return f"""
     class MFStruct:
     {class_variables}
     data = []
     
-    # For all the grouping variables bruh
+    # For all the grouping variables
     group_by_map = dict()
     
     for row in cur:
@@ -74,7 +101,9 @@ def phi(s: [str], n: int, v: [str], f: [str], p: [str], g: str):
             group_by_map[key] = len(data) - 1
         
         pos = group_by_map.get(key)
-{group_by_values_insertion}"""
+{group_by_values_insertion}
+    # We need to compute values to the aggregate functions with their corresponding grouping variable predicate.
+{aggregate_loops}"""
 
 
 def main(input_file):
@@ -86,7 +115,8 @@ def main(input_file):
 
     input_params = parse_input(f"input/{input_file}")
     body = phi(input_params['s'], input_params['n'], input_params["v"], input_params["f"], input_params["p"], input_params["g"])
-    # body = phi(['s'], 3, ['cust', 'prod'], ['count_1_quant', 'sum_2_quant', 'avg_2_quant', 'max_3_quant'], [None], "")
+    # body = phi(['s'], 3, ['cust', 'prod'], ['count_1_quant', 'sum_2_quant', 'min_2_quant', 'max_3_quant'],
+    #            ["1.state=='NY' and 1.quant>10 and 1.cust=='Sam'", "2.state=='NJ'", "3.state=='CT'"], "")
 
     # Note: The f allows formatting with variables.
     #       Also, note the indentation is preserved.
