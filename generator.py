@@ -1,6 +1,7 @@
 import subprocess
 import sys
 
+
 # Get input parameters, return a dictionary
 def parse_input(file_name):
     with open(file_name, 'r') as file:
@@ -30,6 +31,7 @@ def parse_input(file_name):
             input_params[section] = line
 
     return input_params
+
 
 def phi(s: [str], n: int, v: [str], f: [str], p: [str], g: str):
     """
