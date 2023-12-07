@@ -25,10 +25,10 @@ def query():
     class MFStruct:
         cust = ""
         prod = ""
-        count_1_quant = ""
-        sum_2_quant = ""
-        min_2_quant = ""
-        max_3_quant = ""
+        count_1_quant = 0
+        sum_2_quant = 0
+        min_2_quant = float('inf')
+        max_3_quant = -1
 
     data = []
     
@@ -36,58 +36,60 @@ def query():
     group_by_map = dict()
     
     for row in cur:
-        key = (row['cust'], row['prod'])
+        key = (row.get('cust'), row.get('prod'))
         
         if (not group_by_map.get(key)) and (group_by_map.get(key) != 0):
             data.append(MFStruct())
             group_by_map[key] = len(data) - 1
         
         pos = group_by_map.get(key)
-        data[pos].cust = row['cust']
-        data[pos].prod = row['prod']
+        data[pos].cust = row.get('cust')
+        data[pos].prod = row.get('prod')
 
     # We need to compute values to the aggregate functions with their corresponding grouping variable predicate.
     cur.scroll(0, mode='absolute')
 
     for row in cur:
-        key = (row['cust'], row['prod'])
-        if row.state=='NY' and row.quant>10 and row.cust=='Sam':
+        key = (row.get('cust'), row.get('prod'))
+        if row.get('state')=='NY' and row.get('quant')>10 and row.get('cust')=='Sam':
             pos = group_by_map[key]
             data[pos].count_1_quant = data[pos].count_1_quant + 1
     cur.scroll(0, mode='absolute')
 
     for row in cur:
-        key = (row['cust'], row['prod'])
-        if row.state=='NJ':
+        key = (row.get('cust'), row.get('prod'))
+        if row.get('state')=='NJ':
             pos = group_by_map[key]
-            data[pos].sum_2_quant = data[pos].sum_2_quant + row['quant']
+            data[pos].sum_2_quant = data[pos].sum_2_quant + row.get('quant')
     cur.scroll(0, mode='absolute')
 
     for row in cur:
-        key = (row['cust'], row['prod'])
-        if row.state=='NJ':
+        key = (row.get('cust'), row.get('prod'))
+        if row.get('state')=='NJ':
             pos = group_by_map[key]
-            data[pos].min_2_quant = min(data[pos].min_2_quant, row['quant'])
+            data[pos].min_2_quant = min(data[pos].min_2_quant, row.get('quant'))
     cur.scroll(0, mode='absolute')
 
     for row in cur:
-        key = (row['cust'], row['prod'])
-        if row.state=='CT':
+        key = (row.get('cust'), row.get('prod'))
+        if row.get('state')=='CT':
             pos = group_by_map[key]
-            data[pos].max_3_quant = max(data[pos].max_3_quant, row['quant'])
+            data[pos].max_3_quant = max(data[pos].max_3_quant, row.get('quant'))
 
     table = PrettyTable()
-    table.field_names = data[0].__dict__.keys()
+    table.field_names = ['cust','prod','count_1_quant','sum_2_quant','min_2_quant','max_3_quant']
     
     for obj in data:
         temp = []
         
-        for j in obj.__dict__.keys():
-            temp.append(obj.__dict__[j])
+        for j in table.field_names:
+            temp.append(getattr(obj, j))
         table.add_row(temp)
 
     # Printing the table
     return table
+
+    
 
 
 def main():

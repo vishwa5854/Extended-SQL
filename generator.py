@@ -13,22 +13,40 @@ def phi(s: [str], n: int, v: [str], f: [str], p: [str], g: str):
     :param g - Predicate for having clause
     """
     class_variables = ""
+    class_variable_names = "["
 
     # Init of f members to corresponding values like for max default should be -1, for min default should be MAX_NUM
     # for sum, it would be 0, count = 0, avg = 0
-    for i in [v, f]:
-        for j in i:
+    for j in v:
+        class_variables += f"""        {j} = ""\n"""
+        class_variable_names += f"'{j}',"
+    for j in f:
+        aggregate_function = j.split('_')[0]
+        class_variable_names += f"'{j}',"
+
+        if aggregate_function == "sum":
+            class_variables += f"""        {j} = 0\n"""
+        elif aggregate_function == "count":
+            class_variables += f"""        {j} = 0\n"""
+        elif aggregate_function == "avg":
+            class_variables += f"""        {j} = 0\n"""
+        elif aggregate_function == "max":
+            class_variables += f"""        {j} = -1\n"""
+        elif aggregate_function == "min":
+            class_variables += f"""        {j} = float('inf')\n"""
+        else:
             class_variables += f"""        {j} = ""\n"""
     class_variables = class_variables[4:]
+    class_variable_names = class_variable_names[:-1] + "]"
     key = "("
 
     for i in v:
-        key += f"row['{i}'], "
+        key += f"row.get('{i}'), "
     key = key[:-2] + ")"
     group_by_values_insertion = ""
 
     for i in v:
-        group_by_values_insertion += f"        data[pos].{i} = row['{i}']\n"
+        group_by_values_insertion += f"        data[pos].{i} = row.get('{i}')\n"
 
     aggregate_loops = ""
 
@@ -37,17 +55,20 @@ def phi(s: [str], n: int, v: [str], f: [str], p: [str], g: str):
     for i in f:
         aggregate_function, gv_num, aggregate_attribute = i.split("_")
         predicate = p[int(gv_num) - 1]
-        predicate = predicate.replace(f"{gv_num}.", "row.")
+        predicate = predicate.replace(f"{gv_num}.", "row.get('")
+        predicate = predicate.replace("==", "')==")
+        predicate = predicate.replace(">", "')>")
+        predicate = predicate.replace("<", "')<")
         aggregate_string = ""
 
         if aggregate_function == "sum":
-            aggregate_string = f"data[pos].{i} + row['{aggregate_attribute}']"
+            aggregate_string = f"data[pos].{i} + row.get('{aggregate_attribute}')"
         elif aggregate_function == "count":
             aggregate_string = f"data[pos].{i} + 1"
         elif aggregate_function == "min":
-            aggregate_string = f"min(data[pos].{i}, row['{aggregate_attribute}'])"
+            aggregate_string = f"min(data[pos].{i}, row.get('{aggregate_attribute}'))"
         elif aggregate_function == "max":
-            aggregate_string = f"max(data[pos].{i}, row['{aggregate_attribute}'])"
+            aggregate_string = f"max(data[pos].{i}, row.get('{aggregate_attribute}'))"
         elif aggregate_function == "avg":
             pass
             # TODO: Figure out the denominator somehow
@@ -73,7 +94,20 @@ def phi(s: [str], n: int, v: [str], f: [str], p: [str], g: str):
         pos = group_by_map.get(key)
 {group_by_values_insertion}
     # We need to compute values to the aggregate functions with their corresponding grouping variable predicate.
-{aggregate_loops}"""
+{aggregate_loops}
+    table = PrettyTable()
+    table.field_names = {class_variable_names}
+    
+    for obj in data:
+        temp = []
+        
+        for j in table.field_names:
+            temp.append(getattr(obj, j))
+        table.add_row(temp)
+
+    # Printing the table
+    return table
+"""
 
 
 def main():
@@ -112,18 +146,7 @@ def query():
     
     _global = []
     {body}
-    table = PrettyTable()
-    table.field_names = data[0].__dict__.keys()
     
-    for obj in data:
-        temp = []
-        
-        for j in obj.__dict__.keys():
-            temp.append(obj.__dict__[j])
-        table.add_row(temp)
-
-    # Printing the table
-    return table
 
 
 def main():
