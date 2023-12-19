@@ -1,7 +1,6 @@
 import subprocess
 import sys
 
-
 # Get input parameters, return a dictionary
 def parse_input(file_name):
     with open(file_name, 'r') as file:
@@ -117,6 +116,13 @@ def phi(s: [str], n: int, v: [str], f: [str], p: [str], g: str):
             g = g.replace(agg_func, f"obj.{agg_func}")
         having_clause = f"    data = [obj for obj in data if {g}]\n"
 
+    # Getting columns for SELECT
+    select_columns = ""
+    for attr in s:
+        select_columns += f"'{attr}', "
+    if select_columns:
+        select_columns = select_columns[:-2]
+    
     return f"""
     class MFStruct:
     {class_variables}
@@ -138,8 +144,9 @@ def phi(s: [str], n: int, v: [str], f: [str], p: [str], g: str):
 {aggregate_loops}
     # Apply HAVING clause if present
 {having_clause}
+
     table = PrettyTable()
-    table.field_names = {class_variable_names}
+    table.field_names = {select_columns}
     
     for obj in data:
         temp = []
