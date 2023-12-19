@@ -76,8 +76,11 @@ def query():
             pos = group_by_map[key]
             data[pos].max_3_quant = max(data[pos].max_3_quant, row.get('quant'))
 
+    # Apply HAVING clause if present
+    data = [obj for obj in data if obj.sum_2_quant > obj.max_3_quant and obj.min_2_quant > 0]
+
     table = PrettyTable()
-    table.field_names = ['cust','prod','count_1_quant','sum_2_quant','min_2_quant','max_3_quant']
+    table.field_names = ['cust', 'prod', 'count_1_quant', 'sum_2_quant', 'min_2_quant', 'max_3_quant']
     
     for obj in data:
         temp = []
