@@ -108,6 +108,17 @@ def phi(s: [str], n: int, v: [str], f: [str], p: [str], g: str):
         aggregate_loops += f"    cur.scroll(0, mode='absolute')\n\n    for row in cur:\n        key = {key}\n        if {predicate}:\n"
         aggregate_loops += f"            pos = group_by_map[key]\n            data[pos].{i} = {aggregate_string}\n"
 
+        # Prepare the HAVING clause logic
+        having_clause = ""
+        if g:
+           # Replace aggregate function names in the HAVING clause with corresponding attributes
+            for agg_func in f:
+                g = g.replace(agg_func, f"obj.{agg_func}")
+            having_clause = f"        data = [obj for obj in data if {g}]\n"
+
+
+
+
     return f"""
     class MFStruct:
     {class_variables}
@@ -127,6 +138,8 @@ def phi(s: [str], n: int, v: [str], f: [str], p: [str], g: str):
 {group_by_values_insertion}
     # We need to compute values to the aggregate functions with their corresponding grouping variable predicate.
 {aggregate_loops}
+    # Apply HAVING clause if present
+{having_clause}
     table = PrettyTable()
     table.field_names = {class_variable_names}
     
