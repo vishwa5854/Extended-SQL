@@ -23,12 +23,11 @@ def query():
     _global = []
     
     class MFStruct:
-        cust = ""
         prod = ""
-        count_1_quant = 0
+        min_0_quant = float('inf')
+        sum_1_quant = 0
         sum_2_quant = 0
-        min_2_quant = float('inf')
-        max_3_quant = -1
+        sum_3_quant = 0
 
     data = []
     
@@ -36,51 +35,73 @@ def query():
     group_by_map = dict()
     
     for row in cur:
-        key = (row.get('cust'), row.get('prod'))
+        key = (row.get('prod'))
         
         if (not group_by_map.get(key)) and (group_by_map.get(key) != 0):
             data.append(MFStruct())
             group_by_map[key] = len(data) - 1
         
         pos = group_by_map.get(key)
-        data[pos].cust = row.get('cust')
         data[pos].prod = row.get('prod')
 
     # We need to compute values to the aggregate functions with their corresponding grouping variable predicate.
     cur.scroll(0, mode='absolute')
 
     for row in cur:
-        key = (row.get('cust'), row.get('prod'))
-        if row.get('state')=='NY' and row.get('quant')>10 and row.get('cust')=='Sam':
-            pos = group_by_map[key]
-            data[pos].count_1_quant = data[pos].count_1_quant + 1
+        key = (row.get('prod'))
+        pos = group_by_map[key]
+        prod = data[pos].prod
+        min_0_quant = data[pos].min_0_quant
+        sum_1_quant = data[pos].sum_1_quant
+        sum_2_quant = data[pos].sum_2_quant
+        sum_3_quant = data[pos].sum_3_quant
+
+        if row.get('prod')==prod:
+            data[pos].min_0_quant = min(data[pos].min_0_quant, row.get('quant'))
     cur.scroll(0, mode='absolute')
 
     for row in cur:
-        key = (row.get('cust'), row.get('prod'))
-        if row.get('state')=='NJ':
-            pos = group_by_map[key]
+        key = (row.get('prod'))
+        pos = group_by_map[key]
+        prod = data[pos].prod
+        min_0_quant = data[pos].min_0_quant
+        sum_1_quant = data[pos].sum_1_quant
+        sum_2_quant = data[pos].sum_2_quant
+        sum_3_quant = data[pos].sum_3_quant
+
+        if row.get('month')==1:
+            data[pos].sum_1_quant = data[pos].sum_1_quant + row.get('quant')
+    cur.scroll(0, mode='absolute')
+
+    for row in cur:
+        key = (row.get('prod'))
+        pos = group_by_map[key]
+        prod = data[pos].prod
+        min_0_quant = data[pos].min_0_quant
+        sum_1_quant = data[pos].sum_1_quant
+        sum_2_quant = data[pos].sum_2_quant
+        sum_3_quant = data[pos].sum_3_quant
+
+        if row.get('month')==2:
             data[pos].sum_2_quant = data[pos].sum_2_quant + row.get('quant')
     cur.scroll(0, mode='absolute')
 
     for row in cur:
-        key = (row.get('cust'), row.get('prod'))
-        if row.get('state')=='NJ':
-            pos = group_by_map[key]
-            data[pos].min_2_quant = min(data[pos].min_2_quant, row.get('quant'))
-    cur.scroll(0, mode='absolute')
+        key = (row.get('prod'))
+        pos = group_by_map[key]
+        prod = data[pos].prod
+        min_0_quant = data[pos].min_0_quant
+        sum_1_quant = data[pos].sum_1_quant
+        sum_2_quant = data[pos].sum_2_quant
+        sum_3_quant = data[pos].sum_3_quant
 
-    for row in cur:
-        key = (row.get('cust'), row.get('prod'))
-        if row.get('state')=='CT':
-            pos = group_by_map[key]
-            data[pos].max_3_quant = max(data[pos].max_3_quant, row.get('quant'))
+        if row.get('month')==3 and row.get('quant')>min_0_quant:
+            data[pos].sum_3_quant = data[pos].sum_3_quant + row.get('quant')
 
     # Apply HAVING clause if present
-    data = [obj for obj in data if obj.sum_2_quant > obj.max_3_quant and obj.min_2_quant > 0]
 
     table = PrettyTable()
-    table.field_names = ['cust', 'prod', 'count_1_quant', 'sum_2_quant', 'min_2_quant', 'max_3_quant']
+    table.field_names = ['prod', 'min_0_quant', 'sum_1_quant', 'sum_2_quant', 'sum_3_quant']
     
     for obj in data:
         temp = []
@@ -93,8 +114,6 @@ def query():
     return table
 
     
-
-
 def main():
     print(query())
     

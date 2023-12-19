@@ -82,12 +82,17 @@ def phi(s: [str], n: int, v: [str], f: [str], p: [str], g: str):
 
     aggregate_loops = ""
 
+    local_variables_for_aggregate = ""
+
+    # We need to insert local variables so that the predicates can use them
+    for i in class_variable_names[1: -1].replace("'", '').split(", "):
+        local_variables_for_aggregate += f"        {i} = data[pos].{i}\n"
+
     # we are generating for loops for each aggregate function with their respective predicates
     # 1.state='NY'
     for i in f:
         aggregate_function, gv_num, aggregate_attribute = i.split("_")
-        # TODO: Add a dummy predicate based on group by to the default grouping variable
-        predicate = p[int(gv_num) - 1]
+        predicate = p[int(gv_num)]
         predicate = predicate.replace(f"{gv_num}.", "row.get('")
         predicate = predicate.replace("==", "')==")
         predicate = predicate.replace(">", "')>")
@@ -106,8 +111,10 @@ def phi(s: [str], n: int, v: [str], f: [str], p: [str], g: str):
             pass
             # TODO: Figure out the denominator somehow
 
-        aggregate_loops += f"    cur.scroll(0, mode='absolute')\n\n    for row in cur:\n        key = {key}\n        if {predicate}:\n"
-        aggregate_loops += f"            pos = group_by_map[key]\n            data[pos].{i} = {aggregate_string}\n"
+        aggregate_loops += (f"    cur.scroll(0, mode='absolute')\n\n    for row in cur:\n        key = {key}\n"
+                            f"        pos = group_by_map[key]\n{local_variables_for_aggregate}\n        "
+                            f"if {predicate}:\n")
+        aggregate_loops += f"            data[pos].{i} = {aggregate_string}\n"
 
     # Prepare the HAVING clause logic
     having_clause = ""
@@ -161,7 +168,18 @@ def main(input_file):
     """
 
     input_params = parse_input(f"input/{input_file}")
-    body = phi(input_params['s'], input_params['n'], input_params["v"], input_params["f"], input_params["p"],
+
+    # We are going to add a predicate for the default grouping variable 0 based on the group by attributes
+    predicates = input_params["p"]
+    group_by_attributes = input_params["v"]
+    new_predicates = ""
+
+    for i in group_by_attributes:
+        new_predicates += f"0.{i}=={i} and "
+    new_predicates = new_predicates[:-5]
+    predicates.insert(0, new_predicates)
+
+    body = phi(input_params['s'], input_params['n'], input_params["v"], input_params["f"], predicates,
                input_params["g"])
     # body = phi(['s'], 3, ['cust', 'prod'], ['count_1_quant', 'sum_2_quant', 'min_2_quant', 'max_3_quant'],
     #            ["1.state=='NY' and 1.quant>10 and 1.cust=='Sam'", "2.state=='NJ'", "3.state=='CT'"], "")
@@ -193,8 +211,6 @@ def query():
     _global = []
     {body}
     
-
-
 def main():
     print(query())
     

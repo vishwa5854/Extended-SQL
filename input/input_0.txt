@@ -1,14 +1,13 @@
 s:
-cust, 1_sum_quant, 2_sum_quant, 3_sum_quant
+prod, sum_1_quant, sum_2_quant, sum_3_quant
 n:
 3
 v:
-cust
+prod
 f:
-1_sum_quant, 1_avg_quant, 2_sum_quant, 3_sum_quant, 3_avg_quant
+min_0_quant, sum_1_quant, sum_2_quant, sum_3_quant
 p:
-1.state==’NY’ and 1.quant > 100
-2.state==’NJ’ and 2.quant > 100
-3.state==’CT’ and 3.quant > 100
+1.month==1
+2.month==2
+3.month==3 and 3.quant>min_0_quant
 g:
-1_sum_quant > 2 * 2_sum_quant or 1_avg_quant > 3_avg_quant
