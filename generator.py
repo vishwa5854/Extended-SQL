@@ -56,6 +56,8 @@ def parse_input(file_name: str) -> dict:
         elif section == "g":
             input_params[section] = line
 
+    # TODO: Handle the case where the number of predicates are lesser than number of grouping variables.
+
     return input_params
 
 
@@ -113,7 +115,9 @@ def phi(s: [str], n: int, v: [str], f: [str], p: [str], g: str) -> str:
         elif aggregate_function == "count":
             class_variables += f"""        {j} = 0\n"""
         elif aggregate_function == "avg":
-            class_variables += f"""        {j} = 0\n"""
+            sum_var = f"{j}_sum"
+            count_var = f"{j}_count"
+            class_variables += f"""        {sum_var} = 0\n        {count_var} = 0\n        {j} = 0\n"""
         elif aggregate_function == "max":
             class_variables += f"""        {j} = -1\n"""
         elif aggregate_function == "min":
@@ -152,21 +156,22 @@ def phi(s: [str], n: int, v: [str], f: [str], p: [str], g: str) -> str:
         aggregate_string = ""
 
         if aggregate_function == "sum":
-            aggregate_string = f"data[pos].{i} + row.get('{aggregate_attribute}')"
+            aggregate_string = f"data[pos].{i} += row.get('{aggregate_attribute}')"
         elif aggregate_function == "count":
-            aggregate_string = f"data[pos].{i} + 1"
+            aggregate_string = f"data[pos].{i} += 1"
         elif aggregate_function == "min":
-            aggregate_string = f"min(data[pos].{i}, row.get('{aggregate_attribute}'))"
+            aggregate_string = f"data[pos].{i} = min(data[pos].{i}, row.get('{aggregate_attribute}'))"
         elif aggregate_function == "max":
-            aggregate_string = f"max(data[pos].{i}, row.get('{aggregate_attribute}'))"
+            aggregate_string = f"data[pos].{i} = max(data[pos].{i}, row.get('{aggregate_attribute}'))"
         elif aggregate_function == "avg":
-            pass
-            # TODO: Figure out the denominator somehow
+            sum_var = f"data[pos].{i}_sum"
+            count_var = f"data[pos].{i}_count"
+            aggregate_string = (f"{sum_var} += row.get('{aggregate_attribute}')\n            {count_var} += 1\n"
+                                f"            data[pos].{i} = {sum_var} / {count_var}")
 
         aggregate_loops += (f"    cur.scroll(0, mode='absolute')\n\n    for row in cur:\n        key = {key}\n"
                             f"        pos = group_by_map[key]\n{local_variables_for_aggregate}\n        "
-                            f"if {predicate}:\n")
-        aggregate_loops += f"            data[pos].{i} = {aggregate_string}\n"
+                            f"if {predicate}:\n            {aggregate_string}\n")
 
     # Prepare the HAVING clause logic
     having_clause = ""

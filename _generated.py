@@ -25,7 +25,9 @@ def query():
     class MFStruct:
         prod = ""
         min_0_quant = float('inf')
-        sum_1_quant = 0
+        avg_1_quant_sum = 0
+        avg_1_quant_count = 0
+        avg_1_quant = 0
         sum_2_quant = 0
         sum_3_quant = 0
 
@@ -52,7 +54,7 @@ def query():
         pos = group_by_map[key]
         prod = data[pos].prod
         min_0_quant = data[pos].min_0_quant
-        sum_1_quant = data[pos].sum_1_quant
+        avg_1_quant = data[pos].avg_1_quant
         sum_2_quant = data[pos].sum_2_quant
         sum_3_quant = data[pos].sum_3_quant
 
@@ -65,12 +67,14 @@ def query():
         pos = group_by_map[key]
         prod = data[pos].prod
         min_0_quant = data[pos].min_0_quant
-        sum_1_quant = data[pos].sum_1_quant
+        avg_1_quant = data[pos].avg_1_quant
         sum_2_quant = data[pos].sum_2_quant
         sum_3_quant = data[pos].sum_3_quant
 
         if row.get('month')==1:
-            data[pos].sum_1_quant = data[pos].sum_1_quant + row.get('quant')
+            data[pos].avg_1_quant_sum += row.get('quant')
+            data[pos].avg_1_quant_count += 1
+            data[pos].avg_1_quant = data[pos].avg_1_quant_sum / data[pos].avg_1_quant_count
     cur.scroll(0, mode='absolute')
 
     for row in cur:
@@ -78,12 +82,12 @@ def query():
         pos = group_by_map[key]
         prod = data[pos].prod
         min_0_quant = data[pos].min_0_quant
-        sum_1_quant = data[pos].sum_1_quant
+        avg_1_quant = data[pos].avg_1_quant
         sum_2_quant = data[pos].sum_2_quant
         sum_3_quant = data[pos].sum_3_quant
 
         if row.get('month')==2:
-            data[pos].sum_2_quant = data[pos].sum_2_quant + row.get('quant')
+            data[pos].sum_2_quant += row.get('quant')
     cur.scroll(0, mode='absolute')
 
     for row in cur:
@@ -91,17 +95,17 @@ def query():
         pos = group_by_map[key]
         prod = data[pos].prod
         min_0_quant = data[pos].min_0_quant
-        sum_1_quant = data[pos].sum_1_quant
+        avg_1_quant = data[pos].avg_1_quant
         sum_2_quant = data[pos].sum_2_quant
         sum_3_quant = data[pos].sum_3_quant
 
         if row.get('month')==3 and row.get('quant')>min_0_quant:
-            data[pos].sum_3_quant = data[pos].sum_3_quant + row.get('quant')
+            data[pos].sum_3_quant += row.get('quant')
 
     # Apply HAVING clause if present
 
     table = PrettyTable()
-    table.field_names = ['prod', 'min_0_quant', 'sum_1_quant', 'sum_2_quant', 'sum_3_quant']
+    table.field_names = ['prod', 'min_0_quant', 'avg_1_quant', 'sum_2_quant', 'sum_3_quant']
     
     for obj in data:
         temp = []

@@ -5,7 +5,7 @@ n:
 v:
 prod
 f:
-min_0_quant, sum_1_quant, sum_2_quant, sum_3_quant
+min_0_quant, avg_1_quant, sum_2_quant, sum_3_quant
 p:
 1.month==1
 2.month==2
