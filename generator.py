@@ -142,7 +142,7 @@ def phi(s: [str], n: int, v: [str], f: [str], p: [str], g: str) -> str:
 
     # We need to insert local variables so that the predicates can use them
     for i in class_variable_names[1: -1].replace("'", '').split(", "):
-        local_variables_for_aggregate += f"        {i} = data[pos].{i}\n"
+        local_variables_for_aggregate += f"            {i} = data[pos].{i}\n"
 
     # we are generating for loops for each aggregate function with their respective predicates
     # 1.state='NY'
@@ -166,12 +166,13 @@ def phi(s: [str], n: int, v: [str], f: [str], p: [str], g: str) -> str:
         elif aggregate_function == "avg":
             sum_var = f"data[pos].{i}_sum"
             count_var = f"data[pos].{i}_count"
-            aggregate_string = (f"{sum_var} += row.get('{aggregate_attribute}')\n            {count_var} += 1\n"
-                                f"            data[pos].{i} = {sum_var} / {count_var}")
+            aggregate_string = (f"{sum_var} += row.get('{aggregate_attribute}')\n                {count_var} += 1\n"
+                                f"                data[pos].{i} = {sum_var} / {count_var}")
 
-        aggregate_loops += (f"    cur.scroll(0, mode='absolute')\n\n    for row in cur:\n        key = {key}\n"
-                            f"        pos = group_by_map[key]\n{local_variables_for_aggregate}\n        "
-                            f"if {predicate}:\n            {aggregate_string}\n")
+        aggregate_loops += (f"    cur.scroll(0, mode='absolute')\n\n    for row in cur:\n"
+                            f"        for pos in range(len(data)):\n"
+                            f"{local_variables_for_aggregate}\n        "
+                            f"    if {predicate}:\n                {aggregate_string}\n")
 
     # Prepare the HAVING clause logic
     having_clause = ""
