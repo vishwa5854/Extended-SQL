@@ -23,13 +23,14 @@ def query():
     _global = []
     
     class MFStruct:
-        prod = ""
-        min_0_quant = float('inf')
+        cust = ""
+        sum_1_quant = 0
         avg_1_quant_sum = 0
         avg_1_quant_count = 0
         avg_1_quant = 0
-        sum_2_quant = 0
-        sum_3_quant = 0
+        max_1_quant = -1
+        min_1_quant = float('inf')
+        count_1_quant = 0
 
     data = []
     
@@ -37,75 +38,88 @@ def query():
     group_by_map = dict()
     
     for row in cur:
-        key = (row.get('prod'))
+        key = (row.get('cust'))
         
         if (not group_by_map.get(key)) and (group_by_map.get(key) != 0):
             data.append(MFStruct())
             group_by_map[key] = len(data) - 1
         
         pos = group_by_map.get(key)
-        data[pos].prod = row.get('prod')
+        data[pos].cust = row.get('cust')
 
     # We need to compute values to the aggregate functions with their corresponding grouping variable predicate.
     cur.scroll(0, mode='absolute')
 
     for row in cur:
-        key = (row.get('prod'))
-        pos = group_by_map[key]
-        prod = data[pos].prod
-        min_0_quant = data[pos].min_0_quant
-        avg_1_quant = data[pos].avg_1_quant
-        sum_2_quant = data[pos].sum_2_quant
-        sum_3_quant = data[pos].sum_3_quant
+        for pos in range(len(data)):
+            cust = data[pos].cust
+            sum_1_quant = data[pos].sum_1_quant
+            avg_1_quant = data[pos].avg_1_quant
+            max_1_quant = data[pos].max_1_quant
+            min_1_quant = data[pos].min_1_quant
+            count_1_quant = data[pos].count_1_quant
 
-        if row.get('prod')==prod:
-            data[pos].min_0_quant = min(data[pos].min_0_quant, row.get('quant'))
+            if row.get('state')=='NY' and row.get('cust')==cust:
+                data[pos].sum_1_quant += row.get('quant')
     cur.scroll(0, mode='absolute')
 
     for row in cur:
-        key = (row.get('prod'))
-        pos = group_by_map[key]
-        prod = data[pos].prod
-        min_0_quant = data[pos].min_0_quant
-        avg_1_quant = data[pos].avg_1_quant
-        sum_2_quant = data[pos].sum_2_quant
-        sum_3_quant = data[pos].sum_3_quant
+        for pos in range(len(data)):
+            cust = data[pos].cust
+            sum_1_quant = data[pos].sum_1_quant
+            avg_1_quant = data[pos].avg_1_quant
+            max_1_quant = data[pos].max_1_quant
+            min_1_quant = data[pos].min_1_quant
+            count_1_quant = data[pos].count_1_quant
 
-        if row.get('month')==1:
-            data[pos].avg_1_quant_sum += row.get('quant')
-            data[pos].avg_1_quant_count += 1
-            data[pos].avg_1_quant = data[pos].avg_1_quant_sum / data[pos].avg_1_quant_count
+            if row.get('state')=='NY' and row.get('cust')==cust:
+                data[pos].avg_1_quant_sum += row.get('quant')
+                data[pos].avg_1_quant_count += 1
+                data[pos].avg_1_quant = data[pos].avg_1_quant_sum / data[pos].avg_1_quant_count
     cur.scroll(0, mode='absolute')
 
     for row in cur:
-        key = (row.get('prod'))
-        pos = group_by_map[key]
-        prod = data[pos].prod
-        min_0_quant = data[pos].min_0_quant
-        avg_1_quant = data[pos].avg_1_quant
-        sum_2_quant = data[pos].sum_2_quant
-        sum_3_quant = data[pos].sum_3_quant
+        for pos in range(len(data)):
+            cust = data[pos].cust
+            sum_1_quant = data[pos].sum_1_quant
+            avg_1_quant = data[pos].avg_1_quant
+            max_1_quant = data[pos].max_1_quant
+            min_1_quant = data[pos].min_1_quant
+            count_1_quant = data[pos].count_1_quant
 
-        if row.get('month')==2:
-            data[pos].sum_2_quant += row.get('quant')
+            if row.get('state')=='NY' and row.get('cust')==cust:
+                data[pos].max_1_quant = max(data[pos].max_1_quant, row.get('quant'))
     cur.scroll(0, mode='absolute')
 
     for row in cur:
-        key = (row.get('prod'))
-        pos = group_by_map[key]
-        prod = data[pos].prod
-        min_0_quant = data[pos].min_0_quant
-        avg_1_quant = data[pos].avg_1_quant
-        sum_2_quant = data[pos].sum_2_quant
-        sum_3_quant = data[pos].sum_3_quant
+        for pos in range(len(data)):
+            cust = data[pos].cust
+            sum_1_quant = data[pos].sum_1_quant
+            avg_1_quant = data[pos].avg_1_quant
+            max_1_quant = data[pos].max_1_quant
+            min_1_quant = data[pos].min_1_quant
+            count_1_quant = data[pos].count_1_quant
 
-        if row.get('month')==3 and row.get('quant')>min_0_quant:
-            data[pos].sum_3_quant += row.get('quant')
+            if row.get('state')=='NY' and row.get('cust')==cust:
+                data[pos].min_1_quant = min(data[pos].min_1_quant, row.get('quant'))
+    cur.scroll(0, mode='absolute')
+
+    for row in cur:
+        for pos in range(len(data)):
+            cust = data[pos].cust
+            sum_1_quant = data[pos].sum_1_quant
+            avg_1_quant = data[pos].avg_1_quant
+            max_1_quant = data[pos].max_1_quant
+            min_1_quant = data[pos].min_1_quant
+            count_1_quant = data[pos].count_1_quant
+
+            if row.get('state')=='NY' and row.get('cust')==cust:
+                data[pos].count_1_quant += 1
 
     # Apply HAVING clause if present
 
     table = PrettyTable()
-    table.field_names = ['prod', 'min_0_quant', 'avg_1_quant', 'sum_2_quant', 'sum_3_quant']
+    table.field_names = ['cust', 'sum_1_quant', 'avg_1_quant', 'max_1_quant', 'min_1_quant', 'count_1_quant']
     
     for obj in data:
         temp = []
