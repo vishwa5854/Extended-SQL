@@ -116,13 +116,33 @@ def phi(s: [str], n: int, v: [str], f: [str], p: [str], g: str):
             g = g.replace(agg_func, f"obj.{agg_func}")
         having_clause = f"    data = [obj for obj in data if {g}]\n"
 
-    # Getting columns for SELECT
-    select_columns = ""
+    # SELECT implementation
+
+    import re
+
+    def get_arithmetic_operation(attr):
+        pattern = re.compile(r'([+\-*/])')
+        match = pattern.search(attr)
+
+        if match:
+            operator = match.group(1)
+            position = match.start()
+            operand1 = attr[:position].strip()
+            operand2 = attr[position + 1:].strip()
+            return {"operator": operator, "operand1": operand1, "operand2": operand2, "found": True}
+        else:
+            return {"found": False}
+
+    operations_dict = {}
+
     for attr in s:
-        select_columns += f"'{attr}', "
-    if select_columns:
-        select_columns = select_columns[:-2]
-    
+        operation = get_arithmetic_operation(attr)
+        operations_dict[attr] = operation
+
+    select_columns = list(operations_dict.keys())
+    str_expr = "{getattr(obj, operations_dict[j]['operand1'])} {operations_dict[j]['operator']} {getattr(obj, operations_dict[j]['operand2'])}"
+    int_expr = """f\"{operations_dict[j]['operand1']} {operations_dict[j]['operator']} {getattr(obj, operations_dict[j]['operand2'])}" if is_1_int else f"{getattr(obj, operations_dict[j]['operand1'])} {operations_dict[j]['operator']} {operations_dict[j]['operand2']}\""""
+
     return f"""
     class MFStruct:
     {class_variables}
@@ -145,6 +165,7 @@ def phi(s: [str], n: int, v: [str], f: [str], p: [str], g: str):
     # Apply HAVING clause if present
 {having_clause}
 
+    operations_dict = {operations_dict}
     table = PrettyTable()
     table.field_names = {select_columns}
     
@@ -152,7 +173,18 @@ def phi(s: [str], n: int, v: [str], f: [str], p: [str], g: str):
         temp = []
         
         for j in table.field_names:
-            temp.append(getattr(obj, j))
+            if not operations_dict[j]['found']:
+                temp.append(getattr(obj, j))
+            else:
+                if not(operations_dict[j]['operand1'].isnumeric() or operations_dict[j]['operand2'].isnumeric()):
+                    value = eval(f"{str_expr}")
+                    temp.append(value)
+                else:
+                    is_1_int = True if operations_dict[j]['operand1'].isnumeric() else False
+                    is_2_int = True if operations_dict[j]['operand2'].isnumeric() else False
+                    int_expr = {int_expr}
+                    value = eval(int_expr)
+                    temp.append(value)
         table.add_row(temp)
 
     # Printing the table

@@ -70,14 +70,26 @@ def query():
     data = [obj for obj in data if obj.sum_1_quant > obj.sum_2_quant or obj.sum_3_quant > obj.sum_1_quant]
 
 
+    operations_dict = {'cust': {'found': False}, 'sum_2_quant': {'found': False}, 'sum_1_quant/2': {'operator': '/', 'operand1': 'sum_1_quant', 'operand2': '2', 'found': True}, 'sum_1_quant+sum_2_quant': {'operator': '+', 'operand1': 'sum_1_quant', 'operand2': 'sum_2_quant', 'found': True}, 'sum_1_quant*2': {'operator': '*', 'operand1': 'sum_1_quant', 'operand2': '2', 'found': True}, '2*sum_1_quant': {'operator': '*', 'operand1': '2', 'operand2': 'sum_1_quant', 'found': True}}
     table = PrettyTable()
-    table.field_names = 'cust', 'sum_2_quant', 'sum_3_quant'
+    table.field_names = ['cust', 'sum_2_quant', 'sum_1_quant/2', 'sum_1_quant+sum_2_quant', 'sum_1_quant*2', '2*sum_1_quant']
     
     for obj in data:
         temp = []
         
         for j in table.field_names:
-            temp.append(getattr(obj, j))
+            if not operations_dict[j]['found']:
+                temp.append(getattr(obj, j))
+            else:
+                if not(operations_dict[j]['operand1'].isnumeric() or operations_dict[j]['operand2'].isnumeric()):
+                    value = eval(f"{getattr(obj, operations_dict[j]['operand1'])} {operations_dict[j]['operator']} {getattr(obj, operations_dict[j]['operand2'])}")
+                    temp.append(value)
+                else:
+                    is_1_int = True if operations_dict[j]['operand1'].isnumeric() else False
+                    is_2_int = True if operations_dict[j]['operand2'].isnumeric() else False
+                    int_expr = f"{operations_dict[j]['operand1']} {operations_dict[j]['operator']} {getattr(obj, operations_dict[j]['operand2'])}" if is_1_int else f"{getattr(obj, operations_dict[j]['operand1'])} {operations_dict[j]['operator']} {operations_dict[j]['operand2']}"
+                    value = eval(int_expr)
+                    temp.append(value)
         table.add_row(temp)
 
     # Printing the table

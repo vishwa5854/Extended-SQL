@@ -1,0 +1,14 @@
+s:
+cust, sum_2_quant, sum_1_quant/2, sum_1_quant+sum_2_quant, sum_1_quant*2, 2*sum_1_quant
+n:
+3
+v:
+cust
+f:
+sum_1_quant, sum_2_quant, sum_3_quant
+p:
+1.state=='NY' and 1.quant>100
+2.state=='NJ' and 2.quant>100
+3.state=='CT' and 3.quant>100
+g:
+sum_1_quant > sum_2_quant or sum_3_quant > sum_1_quant
