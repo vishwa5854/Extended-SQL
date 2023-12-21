@@ -1,14 +1,41 @@
 import subprocess
-import sys
+from sys import argv, stderr, stdout, exit
 import re
 
-# Get input parameters, return a dictionary
-def parse_input(file_name):
-    with open(file_name, 'r') as file:
-        lines = file.readlines()
+TAG = "GENERATOR"
+
+
+def log(tag: str, message: str, error: bool = False) -> None:
+    """
+    A basic logger which would emit messages to either stdout or stderr based on the error flag
+    :param tag: The tag to indicate where the message is coming from
+    :param message: The actual message you want to write to the stream
+    :param error: Flag to indicate if it is an error message or a normal output
+    :return: None
+    """
+    if error:
+        stderr.write(f"[{tag}] {message}\n")
+        stderr.flush()
+        return
+    stdout.write(f"{tag}: {message}\n")
+    stdout.flush()
+
+
+def parse_input(file_name: str) -> dict:
+    """
+    This function parses the give input file which contains all 6 parameters of PHI into a dictionary
+    :param file_name: The name of the input file to be parsed
+    :return: dict(str, [str])
+    """
+
+    try:
+        with open(file_name, 'r') as file:
+            lines = file.readlines()
+    except Exception as e:
+        log(TAG, f"Error while reading given input file: {e}", True)
+        exit(1)  # We cannot really move forward without inputs, so we exit with an exit code.
 
     input_params = {"s": [], "n": 0, "v": [], "f": [], "p": [], "g": ""}
-
     sections = ["s", "n", "v", "f", "p", "g"]
     section = None
 
@@ -30,10 +57,37 @@ def parse_input(file_name):
         elif section == "g":
             input_params[section] = line
 
+    # TODO: Handle the case where the number of predicates are lesser than number of grouping variables.
+
     return input_params
 
 
-def phi(s: [str], n: int, v: [str], f: [str], p: [str], g: str):
+def initialise_predicate_for_default_grouping_variable(input_params: dict) -> [str]:
+    """
+    This function is responsible for initializing a predicate for default grouping variable (aka group by attributes)
+    :param input_params - Dictionary of input parameters loaded from the input file
+    :return - List of predicates
+    """
+    # We are going to add a predicate for the default grouping variable 0 based on the group by attributes
+    predicates = input_params["p"]
+    predicate_for_default_grouping_variable = ""
+
+    for i in input_params["v"]:
+        predicate_for_default_grouping_variable += f"0.{i}=={i} and "
+
+    if predicate_for_default_grouping_variable != "":
+        predicate_for_default_grouping_variable = predicate_for_default_grouping_variable[:-5]
+
+    """
+    Even though we don't have any aggregate functions for default grouping variable we are still inserting
+    an empty string into the predicates at position 0, so that the existing logic for getting predicates
+    would be simpler.    
+    """
+    predicates.insert(0, predicate_for_default_grouping_variable)
+    return predicates
+
+
+def phi(s: [str], n: int, v: [str], f: [str], p: [str], g: str) -> str:
     """
     This function is responsible for creating MF_STRUCT for the given 6 parameters of PHI operator
     :param s - List of projected attributes for the query output
@@ -43,6 +97,7 @@ def phi(s: [str], n: int, v: [str], f: [str], p: [str], g: str):
                 Eg: [count_1_quant, sum_2_quant, avg_2_quant, max_3_quant]
     :param p - list of predicates to define the ranges for the grouping variables
     :param g - Predicate for having clause
+    :return - String containing the body of the _generated.py code with all the table scans and logic
     """
     class_variables = ""
     class_variable_names = "["
@@ -61,7 +116,9 @@ def phi(s: [str], n: int, v: [str], f: [str], p: [str], g: str):
         elif aggregate_function == "count":
             class_variables += f"""        {j} = 0\n"""
         elif aggregate_function == "avg":
-            class_variables += f"""        {j} = 0\n"""
+            sum_var = f"{j}_sum"
+            count_var = f"{j}_count"
+            class_variables += f"""        {sum_var} = 0\n        {count_var} = 0\n        {j} = 0\n"""
         elif aggregate_function == "max":
             class_variables += f"""        {j} = -1\n"""
         elif aggregate_function == "min":
@@ -82,12 +139,17 @@ def phi(s: [str], n: int, v: [str], f: [str], p: [str], g: str):
 
     aggregate_loops = ""
 
+    local_variables_for_aggregate = ""
+
+    # We need to insert local variables so that the predicates can use them
+    for i in class_variable_names[1: -1].replace("'", '').split(", "):
+        local_variables_for_aggregate += f"            {i} = data[pos].{i}\n"
+
     # we are generating for loops for each aggregate function with their respective predicates
     # 1.state='NY'
     for i in f:
         aggregate_function, gv_num, aggregate_attribute = i.split("_")
-        # TODO: Add a dummy predicate based on group by to the default grouping variable
-        predicate = p[int(gv_num) - 1]
+        predicate = p[int(gv_num)]
         predicate = predicate.replace(f"{gv_num}.", "row.get('")
         predicate = predicate.replace("==", "')==")
         predicate = predicate.replace(">", "')>")
@@ -95,19 +157,23 @@ def phi(s: [str], n: int, v: [str], f: [str], p: [str], g: str):
         aggregate_string = ""
 
         if aggregate_function == "sum":
-            aggregate_string = f"data[pos].{i} + row.get('{aggregate_attribute}')"
+            aggregate_string = f"data[pos].{i} += row.get('{aggregate_attribute}')"
         elif aggregate_function == "count":
-            aggregate_string = f"data[pos].{i} + 1"
+            aggregate_string = f"data[pos].{i} += 1"
         elif aggregate_function == "min":
-            aggregate_string = f"min(data[pos].{i}, row.get('{aggregate_attribute}'))"
+            aggregate_string = f"data[pos].{i} = min(data[pos].{i}, row.get('{aggregate_attribute}'))"
         elif aggregate_function == "max":
-            aggregate_string = f"max(data[pos].{i}, row.get('{aggregate_attribute}'))"
+            aggregate_string = f"data[pos].{i} = max(data[pos].{i}, row.get('{aggregate_attribute}'))"
         elif aggregate_function == "avg":
-            pass
-            # TODO: Figure out the denominator somehow
+            sum_var = f"data[pos].{i}_sum"
+            count_var = f"data[pos].{i}_count"
+            aggregate_string = (f"{sum_var} += row.get('{aggregate_attribute}')\n                {count_var} += 1\n"
+                                f"                data[pos].{i} = {sum_var} / {count_var}")
 
-        aggregate_loops += f"    cur.scroll(0, mode='absolute')\n\n    for row in cur:\n        key = {key}\n        if {predicate}:\n"
-        aggregate_loops += f"            pos = group_by_map[key]\n            data[pos].{i} = {aggregate_string}\n"
+        aggregate_loops += (f"    cur.scroll(0, mode='absolute')\n\n    for row in cur:\n"
+                            f"        for pos in range(len(data)):\n"
+                            f"{local_variables_for_aggregate}\n        "
+                            f"    if {predicate}:\n                {aggregate_string}\n")
 
     # Prepare the HAVING clause logic
     having_clause = ""
@@ -190,21 +256,23 @@ def phi(s: [str], n: int, v: [str], f: [str], p: [str], g: str):
     return table
 """
 
-def main(input_file):
+
+def main(input_file: str, run: bool = True):
     """
     This is the generator code. It should take in the MF structure and generate the code
     needed to run the query. That generated code should be saved to a 
     file (e.g. _generated.py) and then run.
     """
 
+    # Parsing the input params from a file into proper data structures so that our PHI function can use them easily
     input_params = parse_input(f"input/{input_file}")
-    body = phi(input_params['s'], input_params['n'], input_params["v"], input_params["f"], input_params["p"],
-               input_params["g"])
-    # body = phi(['s'], 3, ['cust', 'prod'], ['count_1_quant', 'sum_2_quant', 'min_2_quant', 'max_3_quant'],
-    #            ["1.state=='NY' and 1.quant>10 and 1.cust=='Sam'", "2.state=='NJ'", "3.state=='CT'"], "")
 
-    # Note: The f allows formatting with variables.
-    #       Also, note the indentation is preserved.
+    predicates = initialise_predicate_for_default_grouping_variable(input_params)
+
+    body = phi(input_params['s'], input_params['n'], input_params["v"], input_params["f"], predicates,
+               input_params["g"])
+
+    # A big string which contains the output python code to get the data for a given params of PHI
     tmp = f"""
 import os
 import psycopg2
@@ -237,9 +305,26 @@ if "__main__" == __name__:
     """
 
     # Write the generated code to a file
-    open("_generated.py", "w").write(tmp)
-    # Execute the generated code
-    subprocess.run(["python", "_generated.py"])
+    try:
+        # With should automatically close the opened file once it is done
+        with open("_generated.py", "w") as _generated_file:
+            _generated_file.write(tmp)
+    except Exception as e:
+        log(TAG, f"Error while writing the generated python code to _generated.py: {e}", True)
+        exit(1)  # Since we cannot really do anything at this point it is better to exit with an error
+
+    if run:
+        # Execute the generated code
+        subprocess.run(["python", "_generated.py"])
 
 if "__main__" == __name__:
-    main(sys.argv[1])
+    if len(argv) == 1:
+        log(TAG, "Usage: python generator.py input_file_path run?", True)
+        log(TAG, "Input path is required", True)
+        exit(1)  # We cannot proceed without an input, so we exit with an error code.
+    elif len(argv) == 2:
+        main(argv[1])
+        exit(0)
+    elif len(argv) == 3:
+        main(argv[1], bool(argv[2]))
+        exit(0)

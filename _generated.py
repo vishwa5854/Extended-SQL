@@ -24,8 +24,12 @@ def query():
     class MFStruct:
         cust = ""
         sum_1_quant = 0
-        sum_2_quant = 0
-        sum_3_quant = 0
+        avg_1_quant_sum = 0
+        avg_1_quant_count = 0
+        avg_1_quant = 0
+        max_1_quant = -1
+        min_1_quant = float('inf')
+        count_1_quant = 0
 
     data = []
     
@@ -46,32 +50,77 @@ def query():
     cur.scroll(0, mode='absolute')
 
     for row in cur:
-        key = (row.get('cust'))
-        if row.get('state')=='NY' and row.get('quant')>100:
-            pos = group_by_map[key]
-            data[pos].sum_1_quant = data[pos].sum_1_quant + row.get('quant')
+        for pos in range(len(data)):
+            cust = data[pos].cust
+            sum_1_quant = data[pos].sum_1_quant
+            avg_1_quant = data[pos].avg_1_quant
+            max_1_quant = data[pos].max_1_quant
+            min_1_quant = data[pos].min_1_quant
+            count_1_quant = data[pos].count_1_quant
+
+            if row.get('state')=='NY' and row.get('cust')==cust:
+                data[pos].sum_1_quant += row.get('quant')
     cur.scroll(0, mode='absolute')
 
     for row in cur:
-        key = (row.get('cust'))
-        if row.get('state')=='NJ' and row.get('quant')>100:
-            pos = group_by_map[key]
-            data[pos].sum_2_quant = data[pos].sum_2_quant + row.get('quant')
+        for pos in range(len(data)):
+            cust = data[pos].cust
+            sum_1_quant = data[pos].sum_1_quant
+            avg_1_quant = data[pos].avg_1_quant
+            max_1_quant = data[pos].max_1_quant
+            min_1_quant = data[pos].min_1_quant
+            count_1_quant = data[pos].count_1_quant
+
+            if row.get('state')=='NY' and row.get('cust')==cust:
+                data[pos].avg_1_quant_sum += row.get('quant')
+                data[pos].avg_1_quant_count += 1
+                data[pos].avg_1_quant = data[pos].avg_1_quant_sum / data[pos].avg_1_quant_count
     cur.scroll(0, mode='absolute')
 
     for row in cur:
-        key = (row.get('cust'))
-        if row.get('state')=='CT' and row.get('quant')>100:
-            pos = group_by_map[key]
-            data[pos].sum_3_quant = data[pos].sum_3_quant + row.get('quant')
+        for pos in range(len(data)):
+            cust = data[pos].cust
+            sum_1_quant = data[pos].sum_1_quant
+            avg_1_quant = data[pos].avg_1_quant
+            max_1_quant = data[pos].max_1_quant
+            min_1_quant = data[pos].min_1_quant
+            count_1_quant = data[pos].count_1_quant
+
+            if row.get('state')=='NY' and row.get('cust')==cust:
+                data[pos].max_1_quant = max(data[pos].max_1_quant, row.get('quant'))
+    cur.scroll(0, mode='absolute')
+
+    for row in cur:
+        for pos in range(len(data)):
+            cust = data[pos].cust
+            sum_1_quant = data[pos].sum_1_quant
+            avg_1_quant = data[pos].avg_1_quant
+            max_1_quant = data[pos].max_1_quant
+            min_1_quant = data[pos].min_1_quant
+            count_1_quant = data[pos].count_1_quant
+
+            if row.get('state')=='NY' and row.get('cust')==cust:
+                data[pos].min_1_quant = min(data[pos].min_1_quant, row.get('quant'))
+    cur.scroll(0, mode='absolute')
+
+    for row in cur:
+        for pos in range(len(data)):
+            cust = data[pos].cust
+            sum_1_quant = data[pos].sum_1_quant
+            avg_1_quant = data[pos].avg_1_quant
+            max_1_quant = data[pos].max_1_quant
+            min_1_quant = data[pos].min_1_quant
+            count_1_quant = data[pos].count_1_quant
+
+            if row.get('state')=='NY' and row.get('cust')==cust:
+                data[pos].count_1_quant += 1
 
     # Apply HAVING clause if present
-    data = [obj for obj in data if obj.sum_1_quant > obj.sum_2_quant or obj.sum_3_quant > obj.sum_1_quant]
 
 
     operations_dict = {'cust': {'found': False}, 'sum_2_quant': {'found': False}, 'sum_1_quant/2': {'operator': '/', 'operand1': 'sum_1_quant', 'operand2': '2', 'found': True}, 'sum_1_quant+sum_2_quant': {'operator': '+', 'operand1': 'sum_1_quant', 'operand2': 'sum_2_quant', 'found': True}, 'sum_1_quant*2': {'operator': '*', 'operand1': 'sum_1_quant', 'operand2': '2', 'found': True}, '2*sum_1_quant': {'operator': '*', 'operand1': '2', 'operand2': 'sum_1_quant', 'found': True}}
     table = PrettyTable()
-    table.field_names = ['cust', 'sum_2_quant', 'sum_1_quant/2', 'sum_1_quant+sum_2_quant', 'sum_1_quant*2', '2*sum_1_quant']
+    table.field_names = ['cust', 'sum_1_quant', 'avg_1_quant', 'max_1_quant', 'min_1_quant', 'count_1_quant']
     
     for obj in data:
         temp = []
