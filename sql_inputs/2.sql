@@ -1,8 +1,8 @@
 -- Referred from Paper-2 Q.2
--- One may want to identify those months of 1997 that
+-- One may want to identify those months that
 -- were “significant” for the sales of a product: “For each
--- product and sales of 1997, show the product’s average
--- sale before and after each month of 1997.” (trends)
+-- product and sales, show the product’s average
+-- sale before and after each month.” (trends)
 
 -- SQL
 create view B1 as
