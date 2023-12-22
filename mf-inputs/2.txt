@@ -1,0 +1,12 @@
+s:
+cust, prod, sum_1_quant, sum_2_quant, sum_1_quant + sum_2_quant, count_1_quant + count_2_quant, sum_1_quant / count_1_quant, sum_2_quant / count_2_quant
+n:
+2
+v:
+cust, prod
+f:
+sum_1_quant, count_1_quant, sum_2_quant, count_2_quant
+p:
+1.month>=1 and 1.month<=3
+2.month>=4 and 2.month<=6
+g:
