@@ -1,0 +1,13 @@
+s:
+prod, year, month, sum_2_quant, sum_3_quant, avg_1_quant
+n:
+3
+v:
+prod, year, month
+f:
+avg_1_quant, sum_2_quant, sum_3_quant
+p:
+1.year==year
+2.prod==prod and 2.year==year and 2.month==month and 2.quant>avg_1_quant
+3.prod==prod and 3.year==year
+g:
