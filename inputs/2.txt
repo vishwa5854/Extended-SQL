@@ -1,0 +1,12 @@
+s:
+prod, month, avg_1_quant, avg_2_quant
+n:
+2
+v:
+prod, month
+f:
+avg_1_quant, avg_2_quant
+p:
+1.prod==prod and 1.month<month
+2.prod==prod and 2.month>month
+g:
