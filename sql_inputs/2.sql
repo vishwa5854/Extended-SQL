@@ -5,6 +5,7 @@
 -- sale before and after each month.” (trends)
 
 -- SQL
+drop view B1;
 create view B1 as
 select x.prod, x.month, avg(y.quant) as xx
 from Sales x,
@@ -13,6 +14,7 @@ where x.prod = y.prod
   and x.month > y.month
 group by x.prod, x.month;
 
+drop view B2;
 create view B2 as
 select x.prod, x.month, avg(y.quant) as yy
 from Sales x,

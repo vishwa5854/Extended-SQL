@@ -19,8 +19,7 @@ where other_custs_avg_sale > cust_avg_sale;
 -- ESQL
 select cust, prod, avg(X.quant), avg(Y.quant)
 from Sales
-group by cust, prod;
-X, Y
+group by cust, prod; X, Y
 such that X.cust = cust and X.prod = prod,
 Y.prod = prod and Y.cust != cust
 having avg(Y.quant) > avg(X.quant);
