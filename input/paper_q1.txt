@@ -1,0 +1,13 @@
+s:
+prod, sum_1_quant, sum_2_quant, sum_3_quant
+n:
+3
+v:
+prod
+f:
+sum_1_quant, sum_2_quant, sum_3_quant
+p:
+1.month==1 and 1.prod==prod and 1.year==2018
+2.month==2 and 2.prod==prod and 2.year==2018
+3.month==3 and 3.prod==prod and 3.year==2018
+g:
