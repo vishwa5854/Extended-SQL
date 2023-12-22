@@ -16,9 +16,17 @@ WITH t1 as (
 ) select * from t1 inner join t2 on t1.cust = t2.cust;
 
 
--- ESQL
+-- ESQL - EMF
 select cust, sum_1_quant, avg_1_quant, max_1_quant, min_1_quant, count_1_quant, cust, sum_2_quant, avg_2_quant, max_2_quant, min_2_quant, count_2_quant
 from sales
 group by cust; 1, 2
 such that 1.state=='NY' and 1.cust==cust
 2.state=='CT' and 2.cust==cust;
+
+
+-- ESQL - MF
+select cust, sum_1_quant, avg_1_quant, max_1_quant, min_1_quant, count_1_quant, cust, sum_2_quant, avg_2_quant, max_2_quant, min_2_quant, count_2_quant
+from sales
+group by cust; 1, 2
+such that 1.state=='NY'
+2.state=='CT';

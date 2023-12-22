@@ -2,7 +2,9 @@ import subprocess
 from sys import argv, stderr, stdout, exit
 import re
 
-TAG = "GENERATOR"
+TAG: str = "GENERATOR"
+emf: bool = True
+spaces: str = "    "
 
 
 def log(tag: str, message: str, error: bool = False) -> None:
@@ -140,7 +142,7 @@ def phi(s: [str], n: int, v: [str], f: [str], p: [str], g: str) -> str:
 
     # We need to insert local variables so that the predicates can use them
     for i in class_variable_names[1: -1].replace("'", '').split(", "):
-        local_variables_for_aggregate += f"            {i} = data[pos].{i}\n"
+        local_variables_for_aggregate += f"        {spaces}{i} = data[pos].{i}\n"
 
     # we are generating for loops for each aggregate function with their respective predicates
     # 1.state='NY'
@@ -166,18 +168,27 @@ def phi(s: [str], n: int, v: [str], f: [str], p: [str], g: str) -> str:
             sum_var = f"data[pos].{i}_sum"
             count_var = f"data[pos].{i}_count"
             aggregate_string = (f"{sum_var} += row.get('{aggregate_attribute}')\n"
-                                f"                {count_var} += 1\n\n"
-                                f"                if {count_var} != 0:\n"
-                                f"                    data[pos].{i} = {sum_var} / {count_var}\n"
-                                f"                else:\n"
-                                f"                    data[pos].{i} = 'Infinity'")
+                                f"            {spaces}{count_var} += 1\n\n"
+                                f"            {spaces}if {count_var} != 0:\n"
+                                f"            {spaces}    data[pos].{i} = {sum_var} / {count_var}\n"
+                                f"            {spaces}else:\n"
+                                f"            {spaces}    data[pos].{i} = 'Infinity'")
 
-        aggregate_loops += (f"    cur.scroll(0, mode='absolute')\n\n"
-                            f"    for row in cur:\n"
-                            f"        for pos in range(len(data)):\n"
-                            f"{local_variables_for_aggregate}\n        "
-                            f"    if {predicate}:\n"
-                            f"                {aggregate_string}\n")
+        if emf:
+            aggregate_loops += (f"    cur.scroll(0, mode='absolute')\n\n"
+                                f"    for row in cur:\n"
+                                f"        for pos in range(len(data)):\n"
+                                f"{local_variables_for_aggregate}\n        "
+                                f"    if {predicate}:\n"
+                                f"                {aggregate_string}\n")
+        else:
+            aggregate_loops += (f"    cur.scroll(0, mode='absolute')\n\n"
+                                f"    for row in cur:\n"
+                                f"        key = {key}\n"
+                                f"        pos = group_by_map.get(key)\n"
+                                f"{local_variables_for_aggregate}\n        "
+                                f"if {predicate}:\n"
+                                f"            {aggregate_string}\n")
 
     # Prepare the HAVING clause logic
     having_clause = ""
@@ -268,9 +279,13 @@ def process(input_file: str, run: bool = True) -> None:
     needed to run the query. That generated code should be saved to a 
     file (e.g. _generated.py) and then run.
     """
+    global spaces
+
+    if not emf:
+        spaces = ""
 
     # Parsing the input params from a file into proper data structures so that our PHI function can use them easily
-    input_params = parse_input(f"inputs/{input_file}")
+    input_params = parse_input(f"{input_file}")
 
     predicates = initialise_predicate_for_default_grouping_variable(input_params)
 
@@ -307,7 +322,7 @@ if "__main__" == __name__:
     print(query())
     """
 
-    output_file = f"outputs/{input_file.split('.')[0]}_generated.py"
+    output_file = f"outputs/{input_file.split('.')[0].split('/')[1]}_generated.py"
 
     # Write the generated code to a file
     try:
@@ -335,5 +350,16 @@ if "__main__" == __name__:
         if argv[2] == "dont-run":
             process(argv[1], False)
             exit(0)
+        elif argv[2] == "mf":
+            emf = False
+            process(argv[1])
+            exit(0)
         log(TAG, f"Usage: python generator.py input_file [dont-run?]", True)
+        exit(1)
+    elif len(argv) == 4:
+        if argv[3] == "mf" and argv[2] == "dont-run":
+            emf = False
+            process(argv[1], False)
+            exit(0)
+        log(TAG, f"Usage: python generator.py input_file [dont-run?] [mf?]", True)
         exit(1)

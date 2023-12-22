@@ -1,0 +1,12 @@
+s:
+cust, sum_1_quant, avg_1_quant, max_1_quant, min_1_quant, count_1_quant, cust, sum_2_quant, avg_2_quant, max_2_quant, min_2_quant, count_2_quant
+n:
+1
+v:
+cust
+f:
+sum_1_quant, avg_1_quant, max_1_quant, min_1_quant, count_1_quant, sum_2_quant, avg_2_quant, max_2_quant, min_2_quant, count_2_quant
+p:
+1.state=='NY'
+2.state=='CT'
+g:
