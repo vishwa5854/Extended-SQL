@@ -1,6 +1,8 @@
 import subprocess
 from sys import argv, stderr, stdout, exit
 import re
+from os.path import exists, basename, join
+from os import makedirs
 
 TAG: str = "GENERATOR"
 emf: bool = True
@@ -322,7 +324,15 @@ if "__main__" == __name__:
     print(query())
     """
 
-    output_file = f"outputs/{input_file.split('.')[0].split('/')[1]}_generated.py"
+    output_folder = "emf-outputs"
+
+    if not emf:
+        output_folder = "mf-outputs"
+    output_file = f"{basename(input_file.split('.')[0])}_generated.py"
+    output_file = join(output_folder, output_file)
+
+    if not exists(output_folder):
+        makedirs(output_folder)
 
     # Write the generated code to a file
     try:

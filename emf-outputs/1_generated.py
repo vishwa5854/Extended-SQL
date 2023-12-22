@@ -71,7 +71,7 @@ def query():
             min_2_quant = data[pos].min_2_quant
             count_2_quant = data[pos].count_2_quant
 
-            if row.get('state')=='NY' and row.get('cust')==cust:
+            if row.get('state')=='NY':
                 data[pos].sum_1_quant += row.get('quant')
     cur.scroll(0, mode='absolute')
 
@@ -89,7 +89,7 @@ def query():
             min_2_quant = data[pos].min_2_quant
             count_2_quant = data[pos].count_2_quant
 
-            if row.get('state')=='NY' and row.get('cust')==cust:
+            if row.get('state')=='NY':
                 data[pos].avg_1_quant_sum += row.get('quant')
                 data[pos].avg_1_quant_count += 1
 
@@ -113,7 +113,7 @@ def query():
             min_2_quant = data[pos].min_2_quant
             count_2_quant = data[pos].count_2_quant
 
-            if row.get('state')=='NY' and row.get('cust')==cust:
+            if row.get('state')=='NY':
                 data[pos].max_1_quant = max(data[pos].max_1_quant, row.get('quant'))
     cur.scroll(0, mode='absolute')
 
@@ -131,7 +131,7 @@ def query():
             min_2_quant = data[pos].min_2_quant
             count_2_quant = data[pos].count_2_quant
 
-            if row.get('state')=='NY' and row.get('cust')==cust:
+            if row.get('state')=='NY':
                 data[pos].min_1_quant = min(data[pos].min_1_quant, row.get('quant'))
     cur.scroll(0, mode='absolute')
 
@@ -149,7 +149,7 @@ def query():
             min_2_quant = data[pos].min_2_quant
             count_2_quant = data[pos].count_2_quant
 
-            if row.get('state')=='NY' and row.get('cust')==cust:
+            if row.get('state')=='NY':
                 data[pos].count_1_quant += 1
     cur.scroll(0, mode='absolute')
 
@@ -167,7 +167,7 @@ def query():
             min_2_quant = data[pos].min_2_quant
             count_2_quant = data[pos].count_2_quant
 
-            if row.get('state')=='CT' and row.get('cust')==cust:
+            if row.get('state')=='CT':
                 data[pos].sum_2_quant += row.get('quant')
     cur.scroll(0, mode='absolute')
 
@@ -185,7 +185,7 @@ def query():
             min_2_quant = data[pos].min_2_quant
             count_2_quant = data[pos].count_2_quant
 
-            if row.get('state')=='CT' and row.get('cust')==cust:
+            if row.get('state')=='CT':
                 data[pos].avg_2_quant_sum += row.get('quant')
                 data[pos].avg_2_quant_count += 1
 
@@ -209,7 +209,7 @@ def query():
             min_2_quant = data[pos].min_2_quant
             count_2_quant = data[pos].count_2_quant
 
-            if row.get('state')=='CT' and row.get('cust')==cust:
+            if row.get('state')=='CT':
                 data[pos].max_2_quant = max(data[pos].max_2_quant, row.get('quant'))
     cur.scroll(0, mode='absolute')
 
@@ -227,7 +227,7 @@ def query():
             min_2_quant = data[pos].min_2_quant
             count_2_quant = data[pos].count_2_quant
 
-            if row.get('state')=='CT' and row.get('cust')==cust:
+            if row.get('state')=='CT':
                 data[pos].min_2_quant = min(data[pos].min_2_quant, row.get('quant'))
     cur.scroll(0, mode='absolute')
 
@@ -245,7 +245,7 @@ def query():
             min_2_quant = data[pos].min_2_quant
             count_2_quant = data[pos].count_2_quant
 
-            if row.get('state')=='CT' and row.get('cust')==cust:
+            if row.get('state')=='CT':
                 data[pos].count_2_quant += 1
 
     # Apply HAVING clause if present
