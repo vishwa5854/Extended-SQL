@@ -205,7 +205,9 @@ def phi(s: [str], n: int, v: [str], f: [str], p: [str], g: str) -> str:
         operations_dict[attr] = operation
 
     select_columns = list(operations_dict.keys())
+    # This is an expression of type e.g. avg_1_quant * avg_2_quant
     str_expr = "{getattr(obj, operations_dict[j]['operand1'])} {operations_dict[j]['operator']} {getattr(obj, operations_dict[j]['operand2'])}"
+    # This is an expression of type e.g. 2 * avg_1_quant or avg_1_quant * 2
     int_expr = """f\"{operations_dict[j]['operand1']} {operations_dict[j]['operator']} {getattr(obj, operations_dict[j]['operand2'])}" if is_1_int else f"{getattr(obj, operations_dict[j]['operand1'])} {operations_dict[j]['operator']} {operations_dict[j]['operand2']}\""""
 
     return f"""
@@ -257,7 +259,7 @@ def phi(s: [str], n: int, v: [str], f: [str], p: [str], g: str) -> str:
 """
 
 
-def main(input_file: str, run: bool = True) -> None:
+def process(input_file: str, run: bool = True) -> None:
     """
     This is the generator code. It should take in the MF structure and generate the code
     needed to run the query. That generated code should be saved to a 
@@ -302,10 +304,12 @@ if "__main__" == __name__:
     print(query())
     """
 
+    output_file = f"outputs/{input_file.split('.')[0]}_generated.py"
+
     # Write the generated code to a file
     try:
         # With should automatically close the opened file once it is done
-        with open("_generated.py", "w") as _generated_file:
+        with open(output_file, "w") as _generated_file:
             _generated_file.write(tmp)
     except Exception as e:
         log(TAG, f"Error while writing the generated python code to _generated.py: {e}", True)
@@ -313,7 +317,7 @@ if "__main__" == __name__:
 
     if run:
         # Execute the generated code
-        subprocess.run(["python", "_generated.py"])
+        subprocess.run(["python", output_file])
 
 
 if "__main__" == __name__:
@@ -322,11 +326,11 @@ if "__main__" == __name__:
         log(TAG, "Input path is required", True)
         exit(1)  # We cannot proceed without an input, so we exit with an error code.
     elif len(argv) == 2:
-        main(argv[1])
+        process(argv[1])
         exit(0)
     elif len(argv) == 3:
         if argv[2] == "dont-run":
-            main(argv[1], False)
+            process(argv[1], False)
             exit(0)
         log(TAG, f"Usage: python generator.py input_file [dont-run?]", True)
         exit(1)
