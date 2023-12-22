@@ -1,0 +1,12 @@
+s:
+prod, month, year, sum_1_quant / sum_2_quant
+n:
+2
+v:
+prod, month, year
+f:
+sum_1_quant, sum_2_quant
+p:
+1.prod==prod and 1.month==month and 1.year==year
+2.prod==prod and 2.year==year
+g:

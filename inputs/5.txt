@@ -1,0 +1,13 @@
+s:
+cust, prod, avg_1_quant, avg_2_quant
+n:
+2
+v:
+cust, prod
+f:
+avg_1_quant, avg_2_quant
+p:
+1.cust==cust and 1.prod==prod
+2.cust!=cust and 2.prod==prod
+g:
+avg_2_quant>avg_1_quant

@@ -152,6 +152,7 @@ def phi(s: [str], n: int, v: [str], f: [str], p: [str], g: str) -> str:
         predicate = p[int(gv_num)]
         predicate = predicate.replace(f"{gv_num}.", "row.get('")
         predicate = predicate.replace("==", "')==")
+        predicate = predicate.replace("!=", "')!=")
         predicate = predicate.replace(">", "')>")
         predicate = predicate.replace("<", "')<")
         aggregate_string = ""
