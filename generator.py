@@ -166,7 +166,7 @@ def phi(s: [str], n: int, v: [str], f: [str], p: [str], g: str) -> str:
             sum_var = f"data[pos].{i}_sum"
             count_var = f"data[pos].{i}_count"
             aggregate_string = (f"{sum_var} += row.get('{aggregate_attribute}')\n"
-                                f"                {count_var} += 1\n"
+                                f"                {count_var} += 1\n\n"
                                 f"                if {count_var} != 0:\n"
                                 f"                    data[pos].{i} = {sum_var} / {count_var}\n"
                                 f"                else:\n"

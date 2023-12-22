@@ -61,7 +61,10 @@ def query():
             if row.get('prod')==prod and row.get('month')<month:
                 data[pos].avg_1_quant_sum += row.get('quant')
                 data[pos].avg_1_quant_count += 1
-                data[pos].avg_1_quant = data[pos].avg_1_quant_sum / data[pos].avg_1_quant_count
+                if data[pos].avg_1_quant_count != 0:
+                    data[pos].avg_1_quant = data[pos].avg_1_quant_sum / data[pos].avg_1_quant_count
+                else:
+                    data[pos].avg_1_quant = 'Infinity'
     cur.scroll(0, mode='absolute')
 
     for row in cur:
@@ -74,7 +77,10 @@ def query():
             if row.get('prod')==prod and row.get('month')>month:
                 data[pos].avg_2_quant_sum += row.get('quant')
                 data[pos].avg_2_quant_count += 1
-                data[pos].avg_2_quant = data[pos].avg_2_quant_sum / data[pos].avg_2_quant_count
+                if data[pos].avg_2_quant_count != 0:
+                    data[pos].avg_2_quant = data[pos].avg_2_quant_sum / data[pos].avg_2_quant_count
+                else:
+                    data[pos].avg_2_quant = 'Infinity'
 
     # Apply HAVING clause if present
 
