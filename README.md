@@ -37,8 +37,8 @@ Consider this OLAP table schema which records sales.
     SELECT cust, prod, avg(1.quant) as NY_avg_quant, avg(2.quant) as CT_avg_quant
     FROM sales
     GROUP BY cust, prod; 1, 2
-    SUCH THAT 1.state=='NY',
-    2.state=='CT';
+    SUCH THAT 1.state = 'NY',
+    2.state = 'CT';
     ```
 2. One may want to identify those months that were “significant” for the sales of a product: “For each product and sales, show the product’s average sale before and after each month.” (trends)
    Traditional SQL query would look something like this involving multiple **expensive table JOINS**
@@ -76,8 +76,8 @@ Consider this OLAP table schema which records sales.
        avg(Y.quant)
     FROM Sales
     GROUP BY prod, month; X , Y
-    SUCH THAT X.prod=prod and X.month<month,
-    Y.prod=prod and Y.month>month;
+    SUCH THAT X.prod = prod and X.month < month,
+    Y.prod = prod and Y.month > month;
     ```
 
 # Pre-requisites
