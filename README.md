@@ -34,49 +34,49 @@ Consider this OLAP table schema which records sales.
     
     Extended-SQL Version (Note that this is an MF-Query, more on this later)
     ```SQL
-    select cust, prod, avg(1.quant) as NY_avg_quant, avg(2.quant) as CT_avg_quant
-    from sales
-    group by cust, prod; 1, 2
-    such that 1.state=='NY',
+    SELECT cust, prod, avg(1.quant) as NY_avg_quant, avg(2.quant) as CT_avg_quant
+    FROM sales
+    GROUP BY cust, prod; 1, 2
+    SUCH THAT 1.state=='NY',
     2.state=='CT';
     ```
 2. One may want to identify those months that were “significant” for the sales of a product: “For each product and sales, show the product’s average sale before and after each month.” (trends)
    Traditional SQL query would look something like this involving multiple **expensive table JOINS**
     ```SQL
-    drop view B1;
-    create view B1 as
-    select x.prod, x.month, avg(y.quant) as xx
-    from Sales x,
+    DROP VIEW B1;
+    CREATE VIEW B1 as
+    SELECT x.prod, x.month, avg(y.quant) as xx
+    FROM Sales x,
          Sales y
-    where x.prod = y.prod
+    WHERE x.prod = y.prod
       and x.month > y.month
-    group by x.prod, x.month;
+    GROUP BY x.prod, x.month;
     
-    drop view B2;
-    create view B2 as
-    select x.prod, x.month, avg(y.quant) as yy
-    from Sales x,
+    DROP VIEW B2;
+    CREATE VIEW B2 as
+    SELECT x.prod, x.month, avg(y.quant) as yy
+    FROM Sales x,
          Sales y
-    where x.prod = y.prod
+    WHERE x.prod = y.prod
       and x.month < y.month
-    group by x.prod, x.month;
+    GROUP BY x.prod, x.month;
     
-    select B1.prod, B1.month, xx, yy
-    from B1,
+    SELECT B1.prod, B1.month, xx, yy
+    FROM B1,
          B2
-    where B1.prod = B2.prod
+    WHERE B1.prod = B2.prod
       and B1.month = B2.month;
     ```
     
     Extended-SQL Version (Note that this is an EMF-Query, more on this later)
     ```SQL
-    select prod,
+    SELECT prod,
        month,
        avg(X.quant),
        avg(Y.quant)
-    from Sales
-    group by prod, month; X , Y
-    such that X.prod=prod and X.month<month,
+    FROM Sales
+    GROUP BY prod, month; X , Y
+    SUCH THAT X.prod=prod and X.month<month,
     Y.prod=prod and Y.month>month;
     ```
 
