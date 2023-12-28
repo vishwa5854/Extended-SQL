@@ -14,32 +14,72 @@ EMF queries (i.e., Multi-Feature and Extended Multi-Feature queries).
 
 # Normal SQL vs Extended-SQL
 Consider this OLAP table schema which records sales.
-sales (cust, prod, day, month, year, state, quant, date)
+### **sales (cust, prod, day, month, year, state, quant, date)**
 
 1. For each customer and product find avg quantity in states of "NY" and "CT".
-Traditional SQL query would look something like this involving multiple **expensive table JOINS**
-```SQL
-WITH t1 as (
-    SELECT cust, prod, avg(quant)
-    FROM sales
-    WHERE state = 'NY'
-    GROUP BY cust, prod
-), t2 as (
-    SELECT cust, prod, avg(quant)
-    FROM sales
-    WHERE state = 'CT'
-    GROUP BY cust, prod
-) select * from t1 inner join t2 on t1.cust = t2.cust and t1.prod = t2.prod;
-```
-
-Extended-SQL Version (Note that this is an MF-Query, more on this later)
-```SQL
-select cust, prod, avg(1.quant) as NY_avg_quant, avg(2.quant) as CT_avg_quant
-from sales
-group by cust, prod; 1, 2
-such that 1.state=='NY',
-2.state=='CT';
-```
+    Traditional SQL query would look something like this involving multiple **expensive table JOINS**
+    ```SQL
+    WITH t1 as (
+        SELECT cust, prod, avg(quant)
+        FROM sales
+        WHERE state = 'NY'
+        GROUP BY cust, prod
+    ), t2 as (
+        SELECT cust, prod, avg(quant)
+        FROM sales
+        WHERE state = 'CT'
+        GROUP BY cust, prod
+    ) select * from t1 inner join t2 on t1.cust = t2.cust and t1.prod = t2.prod;
+    ```
+    
+    Extended-SQL Version (Note that this is an MF-Query, more on this later)
+    ```SQL
+    select cust, prod, avg(1.quant) as NY_avg_quant, avg(2.quant) as CT_avg_quant
+    from sales
+    group by cust, prod; 1, 2
+    such that 1.state=='NY',
+    2.state=='CT';
+    ```
+2. One may want to identify those months that were “significant” for the sales of a product: “For each product and sales, show the product’s average sale before and after each month.” (trends)
+   Traditional SQL query would look something like this involving multiple **expensive table JOINS**
+    ```SQL
+    drop view B1;
+    create view B1 as
+    select x.prod, x.month, avg(y.quant) as xx
+    from Sales x,
+         Sales y
+    where x.prod = y.prod
+      and x.month > y.month
+    group by x.prod, x.month;
+    
+    drop view B2;
+    create view B2 as
+    select x.prod, x.month, avg(y.quant) as yy
+    from Sales x,
+         Sales y
+    where x.prod = y.prod
+      and x.month < y.month
+    group by x.prod, x.month;
+    
+    select B1.prod, B1.month, xx, yy
+    from B1,
+         B2
+    where B1.prod = B2.prod
+      and B1.month = B2.month;
+    ```
+    
+    Extended-SQL Version (Note that this is an EMF-Query, more on this later)
+    ```SQL
+    select prod,
+       month,
+       avg(X.quant),
+       avg(Y.quant)
+    from Sales
+    group by prod, month; X , Y
+    such that X.prod=prod and X.month<month,
+    Y.prod=prod and Y.month>month;
+    ```
+   
 Extended-SQL is much more _**Simpler & Succint**_
 
 # Pre-requisites
