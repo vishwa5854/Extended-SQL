@@ -12,7 +12,7 @@ The mission of this project is to build a query processing engine for Ad-Hoc OLA
 queries. The query construct is based on an extended SQL syntax known as MF and
 EMF queries (i.e., Multi-Feature and Extended Multi-Feature queries).
 
-# Normal SQL vs Extended-SQL <br> (TLDR; Extended-SQL is much more _**Simpler & Succint**_)
+# Normal SQL vs Extended-SQL <br> (TLDR; Extended-SQL is much more _**Simpler, Succint & Blazingly Fast**_)
 Consider this OLAP table schema which records sales.
 ### **sales (cust, prod, day, month, year, state, quant, date)**
 
