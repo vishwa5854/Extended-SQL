@@ -1,7 +1,11 @@
 # ESQL
 
-Extended SQL lets you decouple group by attributes and aggregate functions by introducing a operation called as PHI in relational algebra, 
-and a new clause called as SUCH THAT.
+Extended-SQL introduces a new operator called PHI to standard SQL to extend & simplify SQL queries (especially OLAP queries, including hierarchies, trends, etc).
+
+This project is based on the philosophy of _**"Succint queries lead to efficient evaluation"**_.
+
+Extended-SQL lets you decouple group by attributes and aggregate functions by introducing a operation called as _**PHI**_ in relational algebra, 
+and a new clause called as _**SUCH THAT**_ which operates on a new term called as _**GROUPING VARIABLES**_.
 
 # Pre-requisites
 1. You need postgres to be running either in your local or modify .env to point to a running postgres instance
