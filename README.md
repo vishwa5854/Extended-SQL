@@ -102,6 +102,21 @@ pip3 install -r requirements.txt
 ```bash
 python3 generator.py <input_file> <options>
 ```
+
+# Sample Usage
+1. If you would like to run an emf query
+    ```bash
+    python3 generator.py emf-inputs/1.txt
+    ```
+2. If you would like to run an mf query
+    ```bash
+    python3 generator.py mf-inputs/1.txt mf
+    ```
+3. If you just wanna generate the code but don't want to run it automatically
+   ```bash
+   python3 generator.py emf-inputs/1.txt dont-run
+   ```
+
 # Installing Postgres & PGAdmin
 I use docker to spin up Postgres and PGAdmin in my local using the <strong>postgres-pgadmin-compose.yml</strong>.
 The below command will spin up a docker compose with both PGAdmin and Postgres with credentials matching in .env file.
