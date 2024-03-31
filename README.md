@@ -87,6 +87,11 @@ Consider this OLAP table schema which records sales.
 docker compose build && docker compose up -d
 ```
 2. Set up the username, password so that .env matches
+3. You would need dev libraries for Postgres
+```bash
+# fedora users example
+sudo dnf install postgresql-devel
+```
 
 # How to run ?
 You need to have postgres running in your local machine or change the configuration of postgres in the .env file.
