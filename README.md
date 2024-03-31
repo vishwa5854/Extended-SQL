@@ -83,6 +83,9 @@ Consider this OLAP table schema which records sales.
 
 # Pre-requisites
 1. You need postgres to be running either in your local or modify .env to point to a running postgres instance
+```bash
+docker compose build && docker compose up -d
+```
 2. Set up the username, password so that .env matches
 
 # How to run ?
